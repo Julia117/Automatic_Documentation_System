@@ -1,0 +1,66 @@
+# load_instruments_from_local_file (function)
+
+**Code:**
+```python
+def load_instruments_from_local_file(file_name: str) -> List[Instrument]:
+    """
+    Open a local file (PDF, Excel, Word or TXT format) and parse it into a list of Instrument objects.
+    :param file_name: Local file path, either absolute or relative.
+    :return: List of Instruments.
+    """
+    if file_name.lower().endswith("pdf"):
+        file_type = "pdf"
+    elif file_name.lower().endswith("xlsx"):
+        file_type = "xlsx"
+    elif file_name.lower().endswith("docx"):
+        file_type = "docx"
+    else:
+        file_type = "txt"
+
+    if file_type == "pdf" or file_type == "xlsx" or file_type == "docx":
+        with open(
+                file_name,
+                "rb") as f:
+            file_as_bytes = f.read()
+
+        file_as_base64 = base64.urlsafe_b64encode(file_as_bytes).decode('ascii')
+
+        harmony_file = RawFile(file_type=file_type, content="," + file_as_base64, file_id=uuid.uuid4().hex,
+                               file_name=file_name)
+    else:
+        with open(
+                file_name,
+                "r", encoding="utf-8") as f:
+            file_as_string = f.read()
+        harmony_file = RawFile(file_type="txt", content=file_as_string, file_id=uuid.uuid4().hex,
+                               file_name=file_name)
+
+    return convert_files_to_instruments([harmony_file])
+```
+
+**Explanation:**
+**`load_instruments_from_local_file` – quick rundown**
+
+1. **Detect file type**  
+   * Looks at the file extension (`.pdf`, `.xlsx`, `.docx`, otherwise treats it as plain text).
+
+2. **Read the file**  
+   * **Binary files** (`pdf`, `xlsx`, `docx`): open in binary mode, read all bytes, encode them to a URL‑safe Base64 string.  
+   * **Text files** (`txt`): open in text mode (UTF‑8) and read the raw string.
+
+3. **Wrap into a `RawFile`**  
+   * Create a `RawFile` object with:
+     * `file_type` set to the detected type,
+     * `content` holding the Base64 string (prefixed with a comma) or the raw text,
+     * a new UUID (`file_id`),
+     * the original file name.
+
+4. **Parse into instruments**  
+   * Pass the single `RawFile` to `convert_files_to_instruments`, which routes it to the appropriate parser (`convert_pdf_to_instruments`, `convert_excel_to_instruments`, etc.) and returns a list of `Instrument` objects.
+
+**Result** – a list of `Instrument` instances extracted from the local file.
+
+**Imports:**
+```
+import base64, import uuid, from typing import List, from harmony.parsing.wrapper_all_parsers import convert_files_to_instruments, from harmony.schemas.requests.text import Instrument, from harmony.schemas.requests.text import RawFile
+```
