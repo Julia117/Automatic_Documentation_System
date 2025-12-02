@@ -45,7 +45,3 @@ def ask_question(qa_chain, query):
     result = qa_chain.invoke({"input": query})
     
     print(" Answer:\n", result["answer"])
-    # print("\n Sources:")
-    # for doc in result["context"]:
-    #     meta = doc.metadata
-    #     print(f"- {meta['title']} (chunk {meta['chunk_index']}) → {meta['pdf_url']}")  

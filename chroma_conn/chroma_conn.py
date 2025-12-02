@@ -6,6 +6,9 @@ from sentence_transformers import SentenceTransformer
 import uuid
 from parser import parser
 
+ST_EMBEDDER = "sentence-transformers/all-MiniLM-L6-v2"
+HF_EMBEDDER = "all-MiniLM-L6-v2"
+
 
 def create_collection(collection_name):
     chroma_client = chromadb.PersistentClient(path="vectorstore")
@@ -14,6 +17,7 @@ def create_collection(collection_name):
         metadata={"hnsw:space": "cosine"}
     )
     return collection
+
 
 def add_chunks_to_chroma(chunks, collection, embedder):
     texts = []
@@ -47,9 +51,9 @@ def add_chunks_to_chroma(chunks, collection, embedder):
 
 
 def get_embedder():
-    embedder = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    embedder = SentenceTransformer(ST_EMBEDDER)
     return embedder
-    
+
 
 def add_to_chroma(code_directory):
     chunks = parser.parse_codebase(code_directory)
@@ -59,23 +63,23 @@ def add_to_chroma(code_directory):
 
     add_chunks_to_chroma(chunks, collection, embedder)
 
+
 def create_or_open_chroma_collection(collection_name):
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = HuggingFaceEmbeddings(model_name=HF_EMBEDDER)
 
     vectorstore = Chroma(
         persist_directory="vectorstore",
         embedding_function=embeddings,
         collection_name=collection_name
-        )
-    
+    )
+
     if vectorstore._collection.count() == 0:
         add_chunks_to_chroma(collection_name)
-    
+
         vectorstore = Chroma(
             persist_directory="vectorstore",
             embedding_function=embeddings,
             collection_name=collection_name
-            )   
+        )
         print("data in now stored in chromadb")
     return vectorstore
-    
